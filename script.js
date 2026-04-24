@@ -1,21 +1,20 @@
 let days = 3;
 let currentPersons = 1;
 let currentConditions = new Set();
-let viewMode = "check"; // ★追加
+let viewMode = "check";
 
 const checkedItems = {};
 const priorityItems = {};
 
+const BASIC_CATEGORIES = new Set(["水・食料", "衛生用品", "防災用具", "生活用品"]);
+
 function calcRequired(item, persons, days) {
   switch (item.calcType) {
-    case "per_person_per_day":
-      return persons * days * item.value;
-    case "per_person":
-      return persons * item.value;
-    case "fixed":
-      return item.value;
-    default:
-      return item.value;
+    case "per_person_per_day": return persons * days * item.value;
+    case "per_person":         return persons * item.value;
+    case "per_day":            return days * item.value;
+    case "fixed":              return item.value;
+    default:                   return item.value;
   }
 }
 
@@ -40,23 +39,48 @@ function render(persons, activeConditions, days) {
   const filtered = filterItems(stockItems, activeConditions);
   const grouped = groupByCategory(filtered);
 
+  let basicGroupStarted = false;
+  let specialGroupStarted = false;
+
   for (const [category, items] of Object.entries(grouped)) {
+    const isBasic = BASIC_CATEGORIES.has(category);
+
+    if (isBasic && !basicGroupStarted) {
+      const gh = document.createElement("div");
+      gh.className = "group-heading";
+      gh.textContent = "非常持ち出し袋";
+      container.appendChild(gh);
+      basicGroupStarted = true;
+    }
+
+    if (!isBasic && !specialGroupStarted) {
+      const sep = document.createElement("div");
+      sep.className = "group-separator";
+      container.appendChild(sep);
+      specialGroupStarted = true;
+    }
+
     const section = document.createElement("section");
-    section.className = "category-section";
+    section.className = isBasic ? "category-section" : "category-section special-section";
 
     const heading = document.createElement("h2");
     heading.textContent = category;
     section.appendChild(heading);
 
     const ul = document.createElement("ul");
-
     for (const item of items) {
       const qty = calcRequired(item, persons, days);
       const isChecked = checkedItems[item.id] ?? false;
+      const noteHtml = item.calcType === "per_day"
+        ? '<span class="item-note">一人分の目安です</span>'
+        : "";
 
       const li = document.createElement("li");
       li.innerHTML = `
-        <span class="item-name">${item.name}</span>
+        <div class="item-info">
+          <span class="item-name">${item.name}</span>
+          ${noteHtml}
+        </div>
         <div class="item-right">
           <span class="item-qty">${qty}<small>${item.unit}</small></span>
           <div class="switch-wrap">
@@ -77,12 +101,9 @@ function render(persons, activeConditions, days) {
   }
 }
 
-// ★ viewModeをちゃんと状態として持つ
 function setViewMode(mode) {
   viewMode = mode;
-
   document.getElementById("check-view").classList.toggle("hidden", mode !== "check");
-
   document.getElementById("shopping-view").classList.toggle("hidden", mode !== "shopping");
 }
 
@@ -104,7 +125,6 @@ function generateShoppingList() {
   }
 
   const grouped = groupByCategory(toBuy);
-
   let html = `
     <h3 class="shopping-title">買い物リスト</h3>
     <div class="shopping-col-header">
@@ -113,23 +133,43 @@ function generateShoppingList() {
     </div>
   `;
 
+  let basicGroupStarted = false;
+  let specialGroupStarted = false;
+
   for (const [category, items] of Object.entries(grouped)) {
-    html += `<p class="shopping-cat-name">${category}</p><ul class="shopping-items">`;
+    const isBasic = BASIC_CATEGORIES.has(category);
+
+    if (isBasic && !basicGroupStarted) {
+      html += `<div class="shopping-group-heading">非常持ち出し袋</div>`;
+      basicGroupStarted = true;
+    }
+
+    if (!isBasic && !specialGroupStarted) {
+      html += `<div class="shopping-group-sep"></div>`;
+      specialGroupStarted = true;
+    }
+
+    html += `<p class="shopping-cat-name${isBasic ? "" : " special-cat"}">${category}</p><ul class="shopping-items">`;
 
     for (const item of items) {
       const qty = calcRequired(item, currentPersons, days);
       const priority = priorityItems[item.id] ?? "";
+      const noteHtml = item.calcType === "per_day"
+        ? '<span class="item-note">一人分の目安です</span>'
+        : "";
 
       html += `
         <li>
           <label class="shopping-row">
             <input type="checkbox" />
-            <span>${item.name}　${qty}${item.unit}</span>
+            <div class="item-info">
+              <span>${item.name}　${qty}${item.unit}</span>
+              ${noteHtml}
+            </div>
           </label>
-
           <div class="priority-group">
             <label class="priority-radio">
-              <input type="radio" name="priority-${item.id}" value="high" data-id="${item.id}" ${priority === "high" ? "checked" : ""}/>
+              <input type="radio" name="priority-${item.id}" value="high"   data-id="${item.id}" ${priority === "high"   ? "checked" : ""}/>
               <span>高</span>
             </label>
             <label class="priority-radio">
@@ -137,21 +177,18 @@ function generateShoppingList() {
               <span>中</span>
             </label>
             <label class="priority-radio">
-              <input type="radio" name="priority-${item.id}" value="low" data-id="${item.id}" ${priority === "low" ? "checked" : ""}/>
+              <input type="radio" name="priority-${item.id}" value="low"    data-id="${item.id}" ${priority === "low"    ? "checked" : ""}/>
               <span>低</span>
             </label>
           </div>
         </li>
       `;
     }
-
     html += `</ul>`;
   }
 
   container.innerHTML = html;
-
   setViewMode("shopping");
-
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -190,11 +227,11 @@ function loadFromStorage() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const personsInput = document.getElementById("persons");
+  const personsInput  = document.getElementById("persons");
   const condCheckboxes = document.querySelectorAll(".cond-checkbox");
-  const tabBtns = document.querySelectorAll(".tab-btn");
-  const stockList = document.getElementById("stock-list");
-  const shoppingList = document.getElementById("shopping-list");
+  const tabBtns       = document.querySelectorAll(".tab-btn");
+  const stockList     = document.getElementById("stock-list");
+  const shoppingList  = document.getElementById("shopping-list");
 
   function getActiveConditions() {
     const active = new Set();
@@ -212,31 +249,28 @@ document.addEventListener("DOMContentLoaded", () => {
     saveToStorage();
   }
 
-  // スイッチ
+  // ある/なしスイッチ
   stockList.addEventListener("change", (e) => {
     const input = e.target.closest("input[data-id]");
     if (!input) return;
-
     const id = parseInt(input.dataset.id, 10);
     checkedItems[id] = input.checked;
-
     const wrap = input.closest(".switch-wrap");
     wrap.querySelector(".switch-label-off").classList.toggle("active", !input.checked);
     wrap.querySelector(".switch-label-on").classList.toggle("active", input.checked);
     saveToStorage();
   });
 
-  // 優先度
+  // 優先度ラジオボタン
   shoppingList.addEventListener("change", (e) => {
     const radio = e.target.closest("input[type='radio'][data-id]");
     if (!radio) return;
-
     const id = parseInt(radio.dataset.id, 10);
     priorityItems[id] = radio.value;
     saveToStorage();
   });
 
-  // タブ（ここはOKだったのでそのまま）
+  // タブ
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       days = parseInt(btn.dataset.days, 10);
@@ -245,15 +279,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // リセット
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    Object.keys(checkedItems).forEach(k => delete checkedItems[k]);
+    Object.keys(priorityItems).forEach(k => delete priorityItems[k]);
+    personsInput.value = 1;
+    condCheckboxes.forEach(cb => { cb.checked = false; });
+    localStorage.clear();
+    update();
+  });
+
   document.getElementById("gen-shopping-list").addEventListener("click", generateShoppingList);
-
   document.getElementById("back-btn").addEventListener("click", () => setViewMode("check"));
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
 
   document.getElementById("print-btn").addEventListener("click", () => {
     if (viewMode !== "shopping") return;
-
     window.print();
   });
 
@@ -261,7 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
   condCheckboxes.forEach((cb) => cb.addEventListener("change", update));
 
   loadFromStorage();
-
   setViewMode("check");
   update();
 });
