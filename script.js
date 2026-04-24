@@ -155,6 +155,40 @@ function generateShoppingList() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function saveToStorage() {
+  const conditions = [...document.querySelectorAll(".cond-checkbox")]
+    .filter(cb => cb.checked)
+    .map(cb => cb.dataset.cond);
+
+  localStorage.setItem("checkedItems",  JSON.stringify(checkedItems));
+  localStorage.setItem("priorityItems", JSON.stringify(priorityItems));
+  localStorage.setItem("persons",       String(currentPersons));
+  localStorage.setItem("conditions",    JSON.stringify(conditions));
+}
+
+function loadFromStorage() {
+  try {
+    const savedChecked = localStorage.getItem("checkedItems");
+    if (savedChecked) Object.assign(checkedItems, JSON.parse(savedChecked));
+
+    const savedPriority = localStorage.getItem("priorityItems");
+    if (savedPriority) Object.assign(priorityItems, JSON.parse(savedPriority));
+
+    const savedPersons = localStorage.getItem("persons");
+    if (savedPersons) document.getElementById("persons").value = savedPersons;
+
+    const savedConditions = localStorage.getItem("conditions");
+    if (savedConditions) {
+      const conds = JSON.parse(savedConditions);
+      document.querySelectorAll(".cond-checkbox").forEach(cb => {
+        cb.checked = conds.includes(cb.dataset.cond);
+      });
+    }
+  } catch {
+    // 破損データは無視
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const personsInput = document.getElementById("persons");
   const condCheckboxes = document.querySelectorAll(".cond-checkbox");
@@ -175,6 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentPersons = isNaN(val) || val < 1 ? 1 : val;
     currentConditions = getActiveConditions();
     render(currentPersons, currentConditions, days);
+    saveToStorage();
   }
 
   // スイッチ
@@ -188,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const wrap = input.closest(".switch-wrap");
     wrap.querySelector(".switch-label-off").classList.toggle("active", !input.checked);
     wrap.querySelector(".switch-label-on").classList.toggle("active", input.checked);
+    saveToStorage();
   });
 
   // 優先度
@@ -197,6 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const id = parseInt(radio.dataset.id, 10);
     priorityItems[id] = radio.value;
+    saveToStorage();
   });
 
   // タブ（ここはOKだったのでそのまま）
@@ -223,8 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
   personsInput.addEventListener("input", update);
   condCheckboxes.forEach((cb) => cb.addEventListener("change", update));
 
-  // ★ 初期表示を明示
-  setViewMode("check");
+  loadFromStorage();
 
+  setViewMode("check");
   update();
 });
