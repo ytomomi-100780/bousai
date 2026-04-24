@@ -2,6 +2,7 @@ let days = 3;
 let currentPersons = 1;
 let currentConditions = new Set();
 const checkedItems = {};
+const priorityItems = {};
 
 function calcRequired(item, persons, days) {
   switch (item.calcType) {
@@ -77,15 +78,33 @@ function generateShoppingList() {
     return;
   }
 
-  const rows = toBuy.map(item => {
-    const qty = calcRequired(item, currentPersons, days);
-    return `<li><label><input type="checkbox" /><span>${item.name}　${qty}${item.unit}</span></label></li>`;
-  }).join("");
+  const grouped = groupByCategory(toBuy);
+  let html = '<h3 class="shopping-title">買い物リスト</h3>';
 
-  container.innerHTML = `
-    <h3 class="shopping-title">買い物リスト</h3>
-    <ul class="shopping-items">${rows}</ul>
-  `;
+  for (const [category, items] of Object.entries(grouped)) {
+    html += `<p class="shopping-cat-name">${category}</p><ul class="shopping-items">`;
+    for (const item of items) {
+      const qty = calcRequired(item, currentPersons, days);
+      const priority = priorityItems[item.id] ?? "";
+      html += `
+        <li>
+          <label class="shopping-row">
+            <input type="checkbox" />
+            <span>${item.name}　${qty}${item.unit}</span>
+          </label>
+          <select class="priority-select" data-id="${item.id}">
+            <option value="">－</option>
+            <option value="high"   ${priority === "high"   ? "selected" : ""}>高</option>
+            <option value="medium" ${priority === "medium" ? "selected" : ""}>中</option>
+            <option value="low"    ${priority === "low"    ? "selected" : ""}>低</option>
+          </select>
+        </li>
+      `;
+    }
+    html += `</ul>`;
+  }
+
+  container.innerHTML = html;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -93,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const condCheckboxes = document.querySelectorAll(".cond-checkbox");
   const tabBtns = document.querySelectorAll(".tab-btn");
   const stockList = document.getElementById("stock-list");
+  const shoppingList = document.getElementById("shopping-list");
 
   function getActiveConditions() {
     const active = new Set();
@@ -109,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
     render(currentPersons, currentConditions, days);
   }
 
+  // ある/なしスイッチ（備蓄リスト）
   stockList.addEventListener("change", e => {
     const input = e.target.closest("input[data-id]");
     if (!input) return;
@@ -117,6 +138,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const wrap = input.closest(".switch-wrap");
     wrap.querySelector(".switch-label-off").classList.toggle("active", !input.checked);
     wrap.querySelector(".switch-label-on").classList.toggle("active", input.checked);
+  });
+
+  // 優先度セレクト（買い物リスト）
+  shoppingList.addEventListener("change", e => {
+    const select = e.target.closest(".priority-select");
+    if (!select) return;
+    const id = parseInt(select.dataset.id, 10);
+    priorityItems[id] = select.value || null;
   });
 
   tabBtns.forEach(btn => {
@@ -128,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("gen-shopping-list").addEventListener("click", generateShoppingList);
+  document.getElementById("print-btn").addEventListener("click", () => window.print());
 
   personsInput.addEventListener("input", update);
   condCheckboxes.forEach(cb => cb.addEventListener("change", update));

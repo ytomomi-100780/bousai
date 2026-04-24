@@ -260,8 +260,13 @@ main {
   margin-top: 8px;
 }
 
+.shopping-btns {
+  display: flex;
+  gap: 8px;
+}
+
 .gen-btn {
-  width: 100%;
+  flex: 1;
   padding: 14px;
   background: #333;
   color: #fff;
@@ -277,6 +282,24 @@ main {
   background: #555;
 }
 
+.print-btn {
+  padding: 14px 20px;
+  background: #fff;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px solid #333;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.print-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
 #shopping-list {
   margin-top: 16px;
   background: #fff;
@@ -286,11 +309,21 @@ main {
 }
 
 .shopping-title {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: #f5f5f0;
   border-bottom: 1px solid #e0e0e0;
+  letter-spacing: 0.05em;
+}
+
+.shopping-cat-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d94f3d;
+  padding: 8px 16px 6px;
+  background: #fff3f2;
+  border-bottom: 1px solid #f0dedd;
   letter-spacing: 0.05em;
 }
 
@@ -299,7 +332,10 @@ main {
 }
 
 .shopping-items li {
-  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 16px;
   border-bottom: 1px solid #f2f2f2;
 }
 
@@ -307,7 +343,7 @@ main {
   border-bottom: none;
 }
 
-.shopping-items label {
+.shopping-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -323,15 +359,27 @@ main {
   cursor: pointer;
 }
 
+.priority-select {
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+
 .shopping-empty {
   color: #888;
   font-size: 0.9rem;
   text-align: center;
-  padding: 20px;
+  padding: 24px;
 }
 
 @media print {
-  header, .tab-section, .input-section, .condition-section, .gen-btn, #stock-list {
+  header, .tab-section, .input-section, .condition-section, #stock-list, .shopping-btns {
     display: none !important;
   }
   main {
@@ -339,5 +387,11 @@ main {
   }
   #shopping-list {
     box-shadow: none;
+    margin-top: 0;
+  }
+  .priority-select {
+    border: none;
+    appearance: none;
+    font-weight: 700;
   }
 }
