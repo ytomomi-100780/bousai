@@ -92,12 +92,20 @@ function generateShoppingList() {
             <input type="checkbox" />
             <span>${item.name}　${qty}${item.unit}</span>
           </label>
-          <select class="priority-select" data-id="${item.id}">
-            <option value="">－</option>
-            <option value="high"   ${priority === "high"   ? "selected" : ""}>高</option>
-            <option value="medium" ${priority === "medium" ? "selected" : ""}>中</option>
-            <option value="low"    ${priority === "low"    ? "selected" : ""}>低</option>
-          </select>
+          <div class="priority-group">
+            <label class="priority-radio">
+              <input type="radio" name="priority-${item.id}" value="high"   data-id="${item.id}" ${priority === "high"   ? "checked" : ""} />
+              <span>高</span>
+            </label>
+            <label class="priority-radio">
+              <input type="radio" name="priority-${item.id}" value="medium" data-id="${item.id}" ${priority === "medium" ? "checked" : ""} />
+              <span>中</span>
+            </label>
+            <label class="priority-radio">
+              <input type="radio" name="priority-${item.id}" value="low"    data-id="${item.id}" ${priority === "low"    ? "checked" : ""} />
+              <span>低</span>
+            </label>
+          </div>
         </li>
       `;
     }
@@ -140,12 +148,12 @@ document.addEventListener("DOMContentLoaded", () => {
     wrap.querySelector(".switch-label-on").classList.toggle("active", input.checked);
   });
 
-  // 優先度セレクト（買い物リスト）
+  // 優先度ラジオボタン（買い物リスト）
   shoppingList.addEventListener("change", e => {
-    const select = e.target.closest(".priority-select");
-    if (!select) return;
-    const id = parseInt(select.dataset.id, 10);
-    priorityItems[id] = select.value || null;
+    const radio = e.target.closest("input[type='radio'][data-id]");
+    if (!radio) return;
+    const id = parseInt(radio.dataset.id, 10);
+    priorityItems[id] = radio.value;
   });
 
   tabBtns.forEach(btn => {

@@ -359,16 +359,47 @@ main {
   cursor: pointer;
 }
 
-.priority-select {
-  font-size: 0.8rem;
-  padding: 4px 6px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fff;
-  color: #333;
-  cursor: pointer;
-  outline: none;
+.priority-group {
+  display: flex;
+  gap: 4px;
   flex-shrink: 0;
+}
+
+.priority-radio {
+  cursor: pointer;
+}
+
+.priority-radio input[type="radio"] {
+  display: none;
+}
+
+.priority-radio span {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 4px;
+  color: #bbb;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.priority-radio input[value="high"]:checked + span {
+  background: #ffeeed;
+  color: #d94f3d;
+  border-color: #d94f3d;
+}
+
+.priority-radio input[value="medium"]:checked + span {
+  background: #fff8ed;
+  color: #e8920e;
+  border-color: #e8920e;
+}
+
+.priority-radio input[value="low"]:checked + span {
+  background: #edf4ff;
+  color: #3d7dd9;
+  border-color: #3d7dd9;
 }
 
 .shopping-empty {
@@ -388,10 +419,5 @@ main {
   #shopping-list {
     box-shadow: none;
     margin-top: 0;
-  }
-  .priority-select {
-    border: none;
-    appearance: none;
-    font-weight: 700;
   }
 }
