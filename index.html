@@ -51,9 +51,15 @@
       }
       header {
         background: var(--navy);
-        padding: 32px 32px 26px;
+        padding: 0;
         position: relative;
         overflow: hidden;
+      }
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 32px 26px;
+        position: relative;
       }
       header::before {
         content: "";
@@ -104,6 +110,10 @@
       .controls-section {
         background: var(--navy-pale);
         border-bottom: 1px solid var(--navy-light);
+      }
+      .controls-inner {
+        max-width: 1200px;
+        margin: 0 auto;
         padding: 14px 32px;
         display: flex;
         align-items: center;
@@ -812,13 +822,13 @@
         color: var(--ink);
       }
       @media (max-width: 680px) {
-        header {
+        .header-inner {
           padding: 22px 18px 18px;
         }
         header h1 {
           font-size: 1.3rem;
         }
-        .controls-section {
+        .controls-inner {
           padding: 12px 16px;
           flex-wrap: wrap;
           gap: 12px;
@@ -939,12 +949,15 @@
   </head>
   <body>
     <header>
-      <span class="header-label">BŌSAI ARCHIVE</span>
-      <h1>防災備蓄チェックリスト</h1>
-      <p>備蓄目安を人数から自動計算します</p>
+      <div class="header-inner">
+        <span class="header-label">BŌSAI ARCHIVE</span>
+        <h1>防災備蓄チェックリスト</h1>
+        <p>備蓄目安を人数から自動計算します</p>
+      </div>
     </header>
 
     <div class="controls-section">
+      <div class="controls-inner">
       <div class="controls-persons">
         <label for="persons">世帯人数</label>
         <input type="number" id="persons" value="1" min="1" max="20" />
@@ -968,6 +981,7 @@
       <div class="controls-days">
         <button class="tab-btn active" data-days="3">3日</button>
         <button class="tab-btn" data-days="7">7日</button>
+      </div>
       </div>
     </div>
 
